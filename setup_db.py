@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import date
@@ -102,7 +103,10 @@ Bean.extractions = relationship("ExtractionLog", back_populates="bean", cascade=
 # ---- DBセットアップ ----
 
 def init_db():
-    engine = create_engine('sqlite:///coffee_brew.db', echo=True)
+
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(base_path, 'coffee_brew.db')
+    engine = create_engine(f'sqlite:///{db_path}', echo=True)
     Base.metadata.create_all(engine)
     print("DBとテーブルを読み込みました。")
     return engine
