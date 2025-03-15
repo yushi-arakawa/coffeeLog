@@ -469,7 +469,136 @@ class BeanApp(ctk.CTk):
 
     def show_dripper_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Dripper Page", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="Dripper", font=FONT_TITLE).pack(pady=20)
+        self.clear_content_frame()
+
+        title_label = ctk.CTkLabel(self.content_frame, text="Dripper", font=FONT_TITLE)
+        title_label.grid(row=0, column=0, columnspan=2, pady=(10, 20))
+
+        # テーブル (スクロール対応)
+        self.dripper_table_frame = ctk.CTkScrollableFrame(self.content_frame, height=400)
+        self.dripper_table_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
+
+        self.content_frame.grid_rowconfigure(1, weight=1)
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_columnconfigure(1, weight=0)
+
+        # フォーム
+        self.dripper_form_frame = ctk.CTkFrame(self.content_frame)
+        self.dripper_form_frame.grid(row=2, column=0, sticky="w", padx=10, pady=10)
+
+        self.dripper_form_frame.grid_columnconfigure(0, weight=0)
+        self.dripper_form_frame.grid_columnconfigure(1, weight=1)
+
+        # Tipsフレーム
+        self.dripper_tips_frame = ctk.CTkFrame(self.content_frame)
+        self.dripper_tips_frame.grid(row=2, column=1, sticky="nsew", padx=10, pady=10)
+
+        tips_label = ctk.CTkLabel(self.dripper_tips_frame, text="ドリッパーの情報や性能を登録・管理できます")
+        tips_label.grid(row=0, column=0, padx=10, pady=10)
+
+        # content_frame の列幅調整
+        self.content_frame.grid_columnconfigure(0, weight=1)  # フォーム
+        self.content_frame.grid_columnconfigure(1, weight=30)  # チップス（広げる）
+
+        self.create_dripper_form()
+        self.show_dripper_list()
+
+    def show_dripper_list(self):
+            for widget in self.dripper_table_frame.winfo_children():
+                widget.destroy()
+
+            headers = ["name", "model", "note","filter type","note","",""]
+            for col, header in enumerate(headers):
+                label = ctk.CTkLabel(self.dripper_table_frame, text=header, font=FONT_HEADER)
+                label.grid(row=0, column=col, padx=5, pady=5, sticky="ew")
+
+            from setup_db import Dripper
+            drippers = session.query(Dripper).all()
+
+            for row_idx, dripper in enumerate(drippers, start=1):
+                values = [
+                    dripper.name or "",
+                    str(dripper.model) if dripper.model is not None else "",
+                    str(dripper.filter_type) if dripper.filter_type is not None else "",
+                    str(dripper.note) if dripper.note is not None else "",
+                    "",
+                    ""
+                ]
+                for col_idx, value in enumerate(values):
+                    label = ctk.CTkLabel(self.dripper_table_frame, text=value, width=120)
+                    label.grid(row=row_idx, column=col_idx, padx=5, pady=2, sticky="ew")
+
+                # 編集・削除ボタン
+                edit_button = ctk.CTkButton(self.dripper_table_frame, text="edit", width=70, command=lambda d=dripper: self.edit_dripper(d))
+                edit_button.grid(row=row_idx, column=6, padx=5)
+                delete_button = ctk.CTkButton(self.dripper_table_frame, text="delete", width=70, command=lambda d=dripper: self.delete_dripper(d.id))
+                delete_button.grid(row=row_idx, column=7, padx=5)
+
+    def create_dripper_form(self):
+        labels = ["name", "model", "filter type","note"]
+        self.dripper_entries = {}
+
+        for i, label_text in enumerate(labels):
+            label = ctk.CTkLabel(self.dripper_form_frame, text=label_text, width=200)
+            label.grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            entry = ctk.CTkEntry(self.dripper_form_frame, width=400)
+            entry.grid(row=i, column=1, padx=10, pady=5)
+            self.dripper_entries[label_text] = entry
+
+        save_button = ctk.CTkButton(self.dripper_form_frame, text="ok", command=self.save_dripper)
+        save_button.grid(row=len(labels), column=0, columnspan=2, pady=10, sticky="n")
+
+        self.selected_dripper_id = None
+
+    def clear_dripper_form(self):
+        self.selected_dripper_id = None
+        for entry in self.dripper_entries.values():
+            entry.delete(0, ctk.END)
+
+    def edit_dripper(self, dripper):
+        self.selected_dripper_id = dripper.id
+        self.dripper_entries["name"].delete(0, ctk.END)
+        self.dripper_entries["name"].insert(0, dripper.name)
+        self.dripper_entries["model"].delete(0, ctk.END)
+        self.dripper_entries["model"].insert(0, dripper.model)
+        self.dripper_entries["filter type"].delete(0, ctk.END)
+        self.dripper_entries["filtertype"].insert(0, dripper.note)
+        self.dripper_entries["note"].delete(0, ctk.END)
+        self.dripper_entries["note"].insert(0, dripper.note)
+
+    def save_dripper(self):
+        data = {key: entry.get() for key, entry in self.dripper_entries.items()}
+
+        from setup_db import Dripper 
+
+        if self.selected_grinder_id:
+            dripper = session.query(Dripper).get(self.selected_dripper_id)
+            dripper.name = data["name"]
+            dripper.model = data["model"]
+            dripper.filter_type = data["filter type"]
+            dripper.note = data["note"]
+        else:
+            dripper = Dripper(
+                name=data["name"],
+                model=data["model"],
+                filter_type=data["filter type"],
+                note=data["note"]
+            )
+            session.add(dripper)
+
+        session.commit()
+        session.refresh(dripper)
+        self.clear_dripper_form()
+        self.show_dripper_list()
+
+    def delete_dripper(self, dripper_id):
+        from setup_db import Dripper
+        dripper = session.query(Dripper).get(dripper_id)
+        if dripper:
+            session.delete(dripper)
+            session.commit()
+        self.show_dripper_list()
 
     def show_recipe_page(self):
         self.clear_content_frame()
