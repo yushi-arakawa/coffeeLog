@@ -34,6 +34,7 @@ class Grinder(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     model = Column(String)
+    note = Column(String)  # メモ
 
 class Dripper(Base):
     __tablename__ = 'drippers'
@@ -41,6 +42,7 @@ class Dripper(Base):
     name = Column(String)
     model = Column(String)
     filter_type = Column(String)  # ペーパー/金属 etc.
+    note = Column(String)  # メモ
 
 class BrewRecord(Base):
     __tablename__ = 'brew_records'

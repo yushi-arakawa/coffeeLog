@@ -209,7 +209,6 @@ class BeanApp(ctk.CTk):
     def show_water_page(self):
         self.clear_content_frame()
         ctk.CTkLabel(self.content_frame, text="Water", font=FONT_TITLE).pack(pady=20)
-
         self.clear_content_frame()
 
         title_label = ctk.CTkLabel(self.content_frame, text="Water", font=FONT_TITLE)
@@ -342,6 +341,131 @@ class BeanApp(ctk.CTk):
     def show_grinder_page(self):
         self.clear_content_frame()
         ctk.CTkLabel(self.content_frame, text="Grinder Page", font=FONT_TITLE).pack(pady=20)
+        self.clear_content_frame()
+
+        title_label = ctk.CTkLabel(self.content_frame, text="Grinder", font=FONT_TITLE)
+        title_label.grid(row=0, column=0, columnspan=2, pady=(10, 20))
+
+        # テーブル (スクロール対応)
+        self.grinder_table_frame = ctk.CTkScrollableFrame(self.content_frame, height=400)
+        self.grinder_table_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
+
+        self.content_frame.grid_rowconfigure(1, weight=1)
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        self.content_frame.grid_columnconfigure(1, weight=0)
+
+        # フォーム
+        self.grinder_form_frame = ctk.CTkFrame(self.content_frame)
+        self.grinder_form_frame.grid(row=2, column=0, sticky="w", padx=10, pady=10)
+
+        self.grinder_form_frame.grid_columnconfigure(0, weight=0)
+        self.grinder_form_frame.grid_columnconfigure(1, weight=1)
+
+        # Tipsフレーム
+        self.grinder_tips_frame = ctk.CTkFrame(self.content_frame)
+        self.grinder_tips_frame.grid(row=2, column=1, sticky="nsew", padx=10, pady=10)
+
+        tips_label = ctk.CTkLabel(self.grinder_tips_frame, text="グラインダーの情報や性能を登録・管理できます")
+        tips_label.grid(row=0, column=0, padx=10, pady=10)
+
+        # content_frame の列幅調整
+        self.content_frame.grid_columnconfigure(0, weight=1)  # フォーム
+        self.content_frame.grid_columnconfigure(1, weight=30)  # チップス（広げる）
+
+        self.create_grinder_form()
+        self.show_grinder_list()
+
+    def show_grinder_list(self):
+        for widget in self.grinder_table_frame.winfo_children():
+            widget.destroy()
+
+        headers = ["name", "model", "note","","","",""]
+        for col, header in enumerate(headers):
+            label = ctk.CTkLabel(self.grinder_table_frame, text=header, font=FONT_HEADER)
+            label.grid(row=0, column=col, padx=5, pady=5, sticky="ew")
+
+        from setup_db import Grinder  # Grinderモデルのインポート
+        grinders = session.query(Grinder).all()
+
+        for row_idx, grinder in enumerate(grinders, start=1):
+            values = [
+                grinder.name or "",
+                str(grinder.model) if grinder.model is not None else "",
+                str(grinder.note) if grinder.note is not None else "",
+                "",
+                "",
+                ""
+            ]
+            for col_idx, value in enumerate(values):
+                label = ctk.CTkLabel(self.grinder_table_frame, text=value, width=120)
+                label.grid(row=row_idx, column=col_idx, padx=5, pady=2, sticky="ew")
+
+            # 編集・削除ボタン
+            edit_button = ctk.CTkButton(self.grinder_table_frame, text="edit", width=70, command=lambda g=grinder: self.edit_grinder(g))
+            edit_button.grid(row=row_idx, column=6, padx=5)
+            delete_button = ctk.CTkButton(self.grinder_table_frame, text="delete", width=70, command=lambda g=grinder: self.delete_grinder(g.id))
+            delete_button.grid(row=row_idx, column=7, padx=5)
+
+    def create_grinder_form(self):
+        labels = ["name", "model", "note"]
+        self.grinder_entries = {}
+
+        for i, label_text in enumerate(labels):
+            label = ctk.CTkLabel(self.grinder_form_frame, text=label_text, width=200)
+            label.grid(row=i, column=0, padx=10, pady=5, sticky="w")
+            entry = ctk.CTkEntry(self.grinder_form_frame, width=400)
+            entry.grid(row=i, column=1, padx=10, pady=5)
+            self.grinder_entries[label_text] = entry
+
+        save_button = ctk.CTkButton(self.grinder_form_frame, text="ok", command=self.save_grinder)
+        save_button.grid(row=len(labels), column=0, columnspan=2, pady=10, sticky="n")
+
+        self.selected_grinder_id = None
+
+    def clear_grinder_form(self):
+        self.selected_grinder_id = None
+        for entry in self.grinder_entries.values():
+            entry.delete(0, ctk.END)
+
+    def edit_grinder(self, grinder):
+        self.selected_grinder_id = grinder.id
+        self.grinder_entries["name"].delete(0, ctk.END)
+        self.grinder_entries["name"].insert(0, grinder.name)
+        self.grinder_entries["model"].delete(0, ctk.END)
+        self.grinder_entries["model"].insert(0, grinder.model)
+        self.grinder_entries["note"].delete(0, ctk.END)
+        self.grinder_entries["note"].insert(0, grinder.note)
+
+    def save_grinder(self):
+        data = {key: entry.get() for key, entry in self.grinder_entries.items()}
+
+        from setup_db import Grinder  # Grinderモデルのインポート
+
+        if self.selected_grinder_id:
+            grinder = session.query(Grinder).get(self.selected_grinder_id)
+            grinder.name = data["name"]
+            grinder.model = data["model"]
+            grinder.note = data["note"]
+        else:
+            grinder = Grinder(
+                name=data["name"],
+                model=data["model"],
+                note=data["note"]
+            )
+            session.add(grinder)
+
+        session.commit()
+        session.refresh(grinder)
+        self.clear_grinder_form()
+        self.show_grinder_list()
+
+    def delete_grinder(self, grinder_id):
+        from setup_db import Grinder  # Grinderモデルのインポート
+        grinder = session.query(Grinder).get(grinder_id)
+        if grinder:
+            session.delete(grinder)
+            session.commit()
+        self.show_grinder_list()
 
     def show_dripper_page(self):
         self.clear_content_frame()
