@@ -37,10 +37,6 @@ class BeanApp(ctk.CTk):
         icon_image = ImageTk.PhotoImage(Image.open(icon_path))
         self.iconphoto(True, icon_image)
 
-        # 例：ラベル表示
-        label = ctk.CTkLabel(self, text="Welcome to Coffee Log!")
-        label.grid(pady=20)
-
         # ナビゲーションバー
         self.nav_frame = ctk.CTkFrame(self,width=200)
         self.nav_frame.grid(row=0, column=0, rowspan=2, padx=10, pady=10, sticky="ns")
@@ -84,7 +80,7 @@ class BeanApp(ctk.CTk):
     def show_bean_page(self):
         self.clear_content_frame()
 
-        title_label = ctk.CTkLabel(self.content_frame, text="Beans Page", font=FONT_TITLE)
+        title_label = ctk.CTkLabel(self.content_frame, text="Beans", font=FONT_TITLE)
         title_label.grid(row=0, column=0, columnspan=2,pady=(10, 20))
 
         # テーブル (スクロール対応)
@@ -124,7 +120,7 @@ class BeanApp(ctk.CTk):
         for widget in self.table_frame.winfo_children():
             widget.destroy()
 
-        headers = ["ID", "name", "origin", "roast level", "roast date", "note", "", ""]
+        headers = ["name", "origin", "roast level", "roast date", "note", "", "","",""]
         for col, header in enumerate(headers):
             label = ctk.CTkLabel(self.table_frame, text=header, font=FONT_HEADER)
             label.grid(row=0, column=col, padx=5, pady=5, sticky="ew")
@@ -132,8 +128,8 @@ class BeanApp(ctk.CTk):
         beans = session.query(Bean).all()
         for row_idx, bean in enumerate(beans, start=1):
             values = [
-                str(bean.id), bean.name, bean.origin, bean.roast_level,
-                bean.roast_date.strftime("%Y-%m-%d") if bean.roast_date else "", bean.note or ""
+                bean.name, bean.origin, bean.roast_level,
+                bean.roast_date.strftime("%Y-%m-%d") if bean.roast_date else "", bean.note or "",""
             ]
             for col_idx, value in enumerate(values):
                 label = ctk.CTkLabel(self.table_frame, text=value, width=120)
@@ -212,11 +208,11 @@ class BeanApp(ctk.CTk):
     # ----------------- 他ページ ---------------------
     def show_water_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Water Page", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="Water", font=FONT_TITLE).pack(pady=20)
 
         self.clear_content_frame()
 
-        title_label = ctk.CTkLabel(self.content_frame, text="Water Page", font=FONT_TITLE)
+        title_label = ctk.CTkLabel(self.content_frame, text="Water", font=FONT_TITLE)
         title_label.grid(row=0, column=0, columnspan=2, pady=(10, 20))
 
         # テーブル (スクロール対応)
@@ -252,7 +248,7 @@ class BeanApp(ctk.CTk):
         for widget in self.water_table_frame.winfo_children():
             widget.destroy()
 
-        headers = ["ID", "name", "hardness", "pH", "note", "", "", ""]
+        headers = ["name", "hardness", "pH", "note", "", "", "",""]
         for col, header in enumerate(headers):
             label = ctk.CTkLabel(self.water_table_frame, text=header, font=FONT_HEADER)
             label.grid(row=0, column=col, padx=5, pady=5, sticky="ew")
@@ -262,22 +258,22 @@ class BeanApp(ctk.CTk):
 
         for row_idx, water in enumerate(waters, start=1):
             values = [
-                str(water.id) if water.id is not None else "",
                 water.name or "",
                 str(water.hardness) if water.hardness is not None else "",
                 str(water.ph) if water.ph is not None else "",
                 water.note or "",
+                "",
                 ""
             ]
-        for col_idx, value in enumerate(values):
-            label = ctk.CTkLabel(self.water_table_frame, text=value, width=120)
-            label.grid(row=row_idx, column=col_idx, padx=5, pady=2, sticky="ew")
+            for col_idx, value in enumerate(values):
+                label = ctk.CTkLabel(self.water_table_frame, text=value, width=120)
+                label.grid(row=row_idx, column=col_idx, padx=5, pady=2, sticky="ew")
 
-        # 編集・削除ボタン
-        edit_button = ctk.CTkButton(self.water_table_frame, text="edit", width=70, command=lambda w=water: self.edit_water(w))
-        edit_button.grid(row=row_idx, column=6, padx=5)
-        delete_button = ctk.CTkButton(self.water_table_frame, text="delete", width=70, command=lambda w=water: self.delete_water(w.id))
-        delete_button.grid(row=row_idx, column=7, padx=5)
+            # 編集・削除ボタン
+            edit_button = ctk.CTkButton(self.water_table_frame, text="edit", width=70, command=lambda w=water: self.edit_water(w))
+            edit_button.grid(row=row_idx, column=6, padx=5)
+            delete_button = ctk.CTkButton(self.water_table_frame, text="delete", width=70, command=lambda w=water: self.delete_water(w.id))
+            delete_button.grid(row=row_idx, column=7, padx=5)
 
     def create_water_form(self):
         labels = ["name", "hardness", "pH", "note"]
