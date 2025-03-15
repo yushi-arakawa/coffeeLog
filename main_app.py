@@ -1,4 +1,6 @@
+import os
 import customtkinter as ctk
+from PIL import Image, ImageTk
 from sqlalchemy.orm import sessionmaker
 from setup_db import init_db, Bean
 from datetime import date
@@ -26,6 +28,18 @@ class BeanApp(ctk.CTk):
         self.title("coffeelog")
         self.geometry("1150x700")
         self.selected_bean_id = None  # 編集・削除対象ID
+
+        # パスの設定
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(BASE_DIR, "icon.png")
+
+        # アイコンの設定（Dockやウィンドウに反映）
+        icon_image = ImageTk.PhotoImage(Image.open(icon_path))
+        self.iconphoto(True, icon_image)
+
+        # 例：ラベル表示
+        label = ctk.CTkLabel(self, text="Welcome to Coffee Log!")
+        label.grid(pady=20)
 
         # ナビゲーションバー
         self.nav_frame = ctk.CTkFrame(self,width=200)
