@@ -71,6 +71,7 @@ class BrewRecord(Base):
 
     drink_temp = Column(Float)  # 飲用温度
 
+    tds = Column(Float)
     taste_acidity = Column(Integer)  # 1-5
     taste_sweetness = Column(Integer)
     taste_bitterness = Column(Integer)
@@ -110,7 +111,7 @@ def init_db():
     db_path = os.path.join(base_path, 'coffee_brew.db')
     engine = create_engine(f'sqlite:///{db_path}', echo=True)
     Base.metadata.create_all(engine)
-    print("DBとテーブルを読み込みました。")
+    print("DBを読み込みました。")
     return engine
 
 if __name__ == "__main__":

@@ -19,8 +19,7 @@ session = Session()
 
 # GUI設定       
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
-
+ctk.set_default_color_theme("dark-blue")
 
 class BeanApp(ctk.CTk):
     def __init__(self):
@@ -47,26 +46,29 @@ class BeanApp(ctk.CTk):
         # ボタン（フォントサイズ調整付き）
         button_font = ctk.CTkFont(size=15)  # 文字サイズ共通 
 
-        self.bean_button = ctk.CTkButton(self.nav_frame, text="Beans", width=100, height=85, command=self.show_bean_page,font=button_font)
+        self.bean_button = ctk.CTkButton(self.nav_frame, text="Beans", width=100, height=70, command=self.show_bean_page,font=button_font)
         self.bean_button.grid(row=1, column=0, pady=10)
 
-        self.water_button = ctk.CTkButton(self.nav_frame, text="Water", width=100, height=85, command=self.show_water_page,font=button_font)
+        self.water_button = ctk.CTkButton(self.nav_frame, text="Water", width=100, height=70, command=self.show_water_page,font=button_font)
         self.water_button.grid(row=2, column=0, pady=10)
 
-        self.grinder_button = ctk.CTkButton(self.nav_frame, text="Grinder", width=100, height=85, command=self.show_grinder_page,font=button_font)
+        self.grinder_button = ctk.CTkButton(self.nav_frame, text="Grinder", width=100, height=70, command=self.show_grinder_page,font=button_font)
         self.grinder_button.grid(row=3, column=0, pady=10)
 
-        self.dripper_button = ctk.CTkButton(self.nav_frame, text="Dripper", width=100, height=85, command=self.show_dripper_page,font=button_font)
+        self.dripper_button = ctk.CTkButton(self.nav_frame, text="Dripper", width=100, height=70, command=self.show_dripper_page,font=button_font)
         self.dripper_button.grid(row=4, column=0, pady=10)
 
-        self.recipe_button = ctk.CTkButton(self.nav_frame, text="Recipe", width=100, height=85, command=self.show_recipe_page,font=button_font)
+        self.recipe_button = ctk.CTkButton(self.nav_frame, text="Recipe", width=100, height=70, command=self.show_recipe_page,font=button_font)
         self.recipe_button.grid(row=5, column=0, pady=10)
 
-        self.recipe_button = ctk.CTkButton(self.nav_frame, text="analysis", width=100, height=85, command=self.show_analysis_page,font=button_font)
-        self.recipe_button.grid(row=6, column=0, pady=10)
+        self.recode_button = ctk.CTkButton(self.nav_frame, text="Recoad", width=100, height=70, command=self.show_recode_page,font=button_font)
+        self.recode_button.grid(row=6, column=0, pady=10)
+
+        self.analysis_button = ctk.CTkButton(self.nav_frame, text="analysis", width=100, height=70, command=self.show_analysis_page,font=button_font)
+        self.analysis_button.grid(row=7, column=0, pady=10)
 
         # ★ 下部のスペース
-        self.nav_frame.grid_rowconfigure(7, weight=1)
+        self.nav_frame.grid_rowconfigure(8, weight=1)
 
         # コンテンツフレーム
         self.content_frame = ctk.CTkFrame(self)
@@ -74,7 +76,7 @@ class BeanApp(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.show_bean_page()  # 初期表示
+        self.show_recipe_page()  # 初期表示
 
     # ----------------- Beanページ ---------------------
     def show_bean_page(self):
@@ -602,7 +604,104 @@ class BeanApp(ctk.CTk):
 
     def show_recipe_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Recipe Page", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE).pack(pady=20)
+        self.clear_content_frame()
+        
+        title_label = ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE)
+        title_label.grid(row=0, column=0, columnspan=2, pady=(10, 20))
+
+        # content_frame 自体が広がるように設定
+        self.content_frame.grid_rowconfigure(1, weight=1)  # レシピフォームの行
+        self.content_frame.grid_columnconfigure(0, weight=1)  # 横方向
+
+        # フォーム用のフレーム
+        self.recipe_form_frame = ctk.CTkFrame(self.content_frame, height=400)
+        self.recipe_form_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
+
+        self.recipe_form_frame.grid_columnconfigure(0, weight=0)
+        self.recipe_form_frame.grid_columnconfigure(1, weight=1)
+
+        self.recipe_create_form()
+    
+    def recipe_create_form(self):
+        # Beanの選択
+        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="Bean")
+        self.bean_label.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.bean_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_bean_options())
+        self.bean_dropdown.grid(row=0, column=1, padx=5, pady=5)
+
+        # Waterの選択
+        self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="Water")
+        self.water_label.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+        self.water_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_water_options())
+        self.water_dropdown.grid(row=1, column=1, padx=5, pady=5)
+
+        # Grinderの選択
+        self.grinder_label = ctk.CTkLabel(self.recipe_form_frame, text="Grinder")
+        self.grinder_label.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
+        self.grinder_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_grinder_options())
+        self.grinder_dropdown.grid(row=2, column=1, padx=5, pady=5)
+
+        # Dripperの選択
+        self.dripper_label = ctk.CTkLabel(self.recipe_form_frame, text="Dripper")
+        self.dripper_label.grid(row=3, column=0, padx=5, pady=5, sticky="nsew")
+        self.dripper_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_dripper_options())
+        self.dripper_dropdown.grid(row=3, column=1, padx=5, pady=5)
+
+        # その他の入力フィールド
+        self.room_temp_label = ctk.CTkLabel(self.recipe_form_frame, text="Room Temperature:")
+        self.room_temp_label.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
+        self.room_temp_entry = ctk.CTkEntry(self.recipe_form_frame)
+        self.room_temp_entry.grid(row=4, column=1, padx=5, pady=5)
+
+        self.humidity_label = ctk.CTkLabel(self.recipe_form_frame, text="Humidity:")
+        self.humidity_label.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
+        self.humidity_entry = ctk.CTkEntry(self.recipe_form_frame)
+        self.humidity_entry.grid(row=5, column=1, padx=5, pady=5)
+
+        # BrewRecord 保存ボタン
+        self.save_button = ctk.CTkButton(self.recipe_form_frame, text="register", command=self.save_recipe)
+        self.save_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+
+    def get_bean_options(self):
+        from setup_db import Bean  # Bean モデルのインポート
+        beans = session.query(Bean).all()
+        return [bean.name for bean in beans]
+
+    def get_water_options(self):
+        from setup_db import Water  # Water モデルのインポート
+        waters = session.query(Water).all()
+        return [water.name for water in waters]
+
+    def get_grinder_options(self):
+        from setup_db import Grinder  # Grinder モデルのインポート
+        grinders = session.query(Grinder).all()
+        return [grinder.name for grinder in grinders]
+
+    def get_dripper_options(self):
+        from setup_db import Dripper  # Dripper モデルのインポート
+        drippers = session.query(Dripper).all()
+        return [dripper.name for dripper in drippers]
+
+    def save_recipe(self):
+        # ユーザーが選択した情報を取得
+        bean_name = self.bean_dropdown.get()
+        water_name = self.water_dropdown.get()
+        grinder_name = self.grinder_dropdown.get()
+        dripper_name = self.dripper_dropdown.get()
+        room_temp = float(self.room_temp_entry.get())
+        humidity = float(self.humidity_entry.get())
+
+        # Bean, Water, Grinder, Dripper をデータベースから取得
+        from setup_db import Bean, Water, Grinder, Dripper
+        bean = session.query(Bean).filter(Bean.name == bean_name).first()
+        water = session.query(Water).filter(Water.name == water_name).first()
+        grinder = session.query(Grinder).filter(Grinder.name == grinder_name).first()
+        dripper = session.query(Dripper).filter(Dripper.name == dripper_name).first()
+
+    def show_recode_page(self):
+        self.clear_content_frame()
+        ctk.CTkLabel(self.content_frame, text="recode", font=FONT_TITLE).pack(pady=20)
 
     def show_analysis_page(self):
         self.clear_content_frame()
