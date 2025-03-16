@@ -61,8 +61,8 @@ class BeanApp(ctk.CTk):
         self.recipe_button = ctk.CTkButton(self.nav_frame, text="Recipe", width=100, height=70, command=self.show_recipe_page,font=button_font)
         self.recipe_button.grid(row=5, column=0, pady=10)
 
-        self.recode_button = ctk.CTkButton(self.nav_frame, text="Recoad", width=100, height=70, command=self.show_recode_page,font=button_font)
-        self.recode_button.grid(row=6, column=0, pady=10)
+        self.record_button = ctk.CTkButton(self.nav_frame, text="Record", width=100, height=70, command=self.show_record_page,font=button_font)
+        self.record_button.grid(row=6, column=0, pady=10)
 
         self.analysis_button = ctk.CTkButton(self.nav_frame, text="analysis", width=100, height=70, command=self.show_analysis_page,font=button_font)
         self.analysis_button.grid(row=7, column=0, pady=10)
@@ -664,14 +664,22 @@ class BeanApp(ctk.CTk):
         self.save_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
 
     def get_bean_options(self):
-        from setup_db import Bean  # Bean モデルのインポート
+        from setup_db import Bean
         beans = session.query(Bean).all()
-        return [bean.name for bean in beans]
+        self.bean_display_to_id = {
+            f"{bean.name} | {bean.origin} | 焙煎度:{bean.roast_level}| 焙煎日: {bean.roast_date}": bean.id
+            for bean in beans
+        }
+        return list(self.bean_display_to_id.keys())
 
     def get_water_options(self):
         from setup_db import Water  # Water モデルのインポート
         waters = session.query(Water).all()
-        return [water.name for water in waters]
+        self.water_display_to_id = {
+            f"{water.name} | {water.hardness} | {water.ph}": water.id
+            for water in waters
+        }
+        return list(self.water_display_to_id.keys())
 
     def get_grinder_options(self):
         from setup_db import Grinder  # Grinder モデルのインポート
@@ -699,9 +707,9 @@ class BeanApp(ctk.CTk):
         grinder = session.query(Grinder).filter(Grinder.name == grinder_name).first()
         dripper = session.query(Dripper).filter(Dripper.name == dripper_name).first()
 
-    def show_recode_page(self):
+    def show_record_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="recode", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="record", font=FONT_TITLE).pack(pady=20)
 
     def show_analysis_page(self):
         self.clear_content_frame()
