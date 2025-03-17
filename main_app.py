@@ -19,62 +19,96 @@ session = Session()
 
 # GUI設定       
 ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")
+ctk.set_default_color_theme("blue")
 
 class BeanApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("coffeelog")
+        self.title("BrewRecord")
         self.geometry("1150x700")
         self.selected_bean_id = None  # 編集・削除対象ID
 
         # パスの設定
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        icon_path = os.path.join(BASE_DIR, "icon.png")
+        icon_path = os.path.join(BASE_DIR, "icon","icon.png")
 
         # アイコンの設定（Dockやウィンドウに反映）
         icon_image = ImageTk.PhotoImage(Image.open(icon_path))
         self.iconphoto(True, icon_image)
 
-        # ナビゲーションバー
-        self.nav_frame = ctk.CTkFrame(self,width=200)
-        self.nav_frame.grid(row=0, column=0, rowspan=2, padx=10, pady=10, sticky="ns")
+        # ウィンドウ全体のグリッド設定
+        self.grid_rowconfigure(0, weight=1)  
+        self.grid_columnconfigure(0, minsize=80)
+        self.grid_columnconfigure(1, weight=1) 
 
-        # 上部のスペース
-        self.nav_frame.grid_rowconfigure(0, weight=1) 
+        # ナビゲーションバー（幅を指定）
+        self.nav_frame = ctk.CTkFrame(self, corner_radius=0)
+        self.nav_frame.configure(width=100) 
+        self.nav_frame.grid(row=0, column=0, sticky="nsew")
+
+        # ナビゲーション内の行設定（上下スペース確保）
+        self.nav_frame.grid_rowconfigure(0, weight=0)
+        self.nav_frame.grid_rowconfigure(1, weight=0)
+        self.nav_frame.grid_rowconfigure(8, weight=1)
+        self.nav_frame.grid_rowconfigure(9, weight=0)
+
+
+        # 画像の読み込み（ファイル名をパスにする）
+        img_path = os.path.join(os.getcwd(),"icon","bean.png") 
+        img = Image.open(img_path)
+        bean_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","water.png") 
+        img = Image.open(img_path)
+        water_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","grinder.png") 
+        img = Image.open(img_path)
+        grinder_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","dripper.png") 
+        img = Image.open(img_path)
+        dripper_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","brew.png") 
+        img = Image.open(img_path)
+        brew_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","list.png") 
+        img = Image.open(img_path)
+        list_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","analysis.png") 
+        img = Image.open(img_path)
+        analysis_img = ctk.CTkImage(light_image=img, dark_image=img)
+        img_path = os.path.join(os.getcwd(),"icon","setting.png") 
+        img = Image.open(img_path)
+        setting_img = ctk.CTkImage(light_image=img, dark_image=img)
 
         # ボタン（フォントサイズ調整付き）
-        button_font = ctk.CTkFont(size=15)  # 文字サイズ共通 
+        button_font = ctk.CTkFont(size=15) 
 
-        self.bean_button = ctk.CTkButton(self.nav_frame, text="Beans", width=100, height=70, command=self.show_bean_page,font=button_font)
-        self.bean_button.grid(row=1, column=0, pady=10)
+        self.bean_button = ctk.CTkButton(self.nav_frame, image=bean_img, text="", width=50, height=50, command=self.show_bean_page)
+        self.bean_button.grid(row=1, column=0, pady=10, padx=20, sticky="ew")
 
-        self.water_button = ctk.CTkButton(self.nav_frame, text="Water", width=100, height=70, command=self.show_water_page,font=button_font)
-        self.water_button.grid(row=2, column=0, pady=10)
+        self.water_button = ctk.CTkButton(self.nav_frame, image=water_img,text="", width=50, height=50, command=self.show_water_page)
+        self.water_button.grid(row=2, column=0, pady=10, padx=20, sticky="ew")
 
-        self.grinder_button = ctk.CTkButton(self.nav_frame, text="Grinder", width=100, height=70, command=self.show_grinder_page,font=button_font)
-        self.grinder_button.grid(row=3, column=0, pady=10)
+        self.grinder_button = ctk.CTkButton(self.nav_frame, image=grinder_img,text="", width=50, height=50, command=self.show_grinder_page)
+        self.grinder_button.grid(row=3, column=0, pady=10, padx=20, sticky="ew")
 
-        self.dripper_button = ctk.CTkButton(self.nav_frame, text="Dripper", width=100, height=70, command=self.show_dripper_page,font=button_font)
-        self.dripper_button.grid(row=4, column=0, pady=10)
+        self.dripper_button = ctk.CTkButton(self.nav_frame, image=dripper_img,text="", width=50, height=50, command=self.show_dripper_page)
+        self.dripper_button.grid(row=4, column=0, pady=10, padx=20, sticky="ew")
 
-        self.recipe_button = ctk.CTkButton(self.nav_frame, text="Recipe", width=100, height=70, command=self.show_recipe_page,font=button_font)
-        self.recipe_button.grid(row=5, column=0, pady=10)
+        self.recipe_button = ctk.CTkButton(self.nav_frame, image=brew_img,text="", width=50, height=50, command=self.show_recipe_page)
+        self.recipe_button.grid(row=5, column=0, pady=10, padx=20, sticky="ew")
 
-        self.record_button = ctk.CTkButton(self.nav_frame, text="Record", width=100, height=70, command=self.show_record_page,font=button_font)
-        self.record_button.grid(row=6, column=0, pady=10)
+        self.record_button = ctk.CTkButton(self.nav_frame, image=list_img,text="", width=50, height=50, command=self.show_record_page)
+        self.record_button.grid(row=6, column=0, pady=10, padx=20, sticky="ew")
 
-        self.analysis_button = ctk.CTkButton(self.nav_frame, text="analysis", width=100, height=70, command=self.show_analysis_page,font=button_font)
-        self.analysis_button.grid(row=7, column=0, pady=10)
+        self.analysis_button = ctk.CTkButton(self.nav_frame, image=analysis_img, text="", width=50, height=50, command=self.show_analysis_page)
+        self.analysis_button.grid(row=7, column=0, pady=10, padx=20, sticky="ew")
 
-        # ★ 下部のスペース
-        self.nav_frame.grid_rowconfigure(8, weight=1)
+        self.setting_button = ctk.CTkButton(self.nav_frame, image=setting_img, text="", width=50, height=50, command=self.show_analysis_page)
+        self.setting_button.grid(row=9, column=0, pady=10, padx=20, sticky="ew")
 
-        # コンテンツフレーム
-        self.content_frame = ctk.CTkFrame(self)
-        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        # メインコンテンツ
+        self.content_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.content_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
         self.show_recipe_page()  # 初期表示
 
@@ -628,19 +662,19 @@ class BeanApp(ctk.CTk):
         self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="Bean")
         self.bean_label.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
         self.bean_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_bean_options())
-        self.bean_dropdown.grid(row=0, column=1, padx=5, pady=5)
+        self.bean_dropdown.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
 
         # Waterの選択
         self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="Water")
         self.water_label.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
         self.water_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_water_options())
-        self.water_dropdown.grid(row=1, column=1, padx=5, pady=5)
+        self.water_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
 
         # Grinderの選択
         self.grinder_label = ctk.CTkLabel(self.recipe_form_frame, text="Grinder")
         self.grinder_label.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
         self.grinder_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_grinder_options())
-        self.grinder_dropdown.grid(row=2, column=1, padx=5, pady=5)
+        self.grinder_dropdown.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
 
         # Dripperの選択
         self.dripper_label = ctk.CTkLabel(self.recipe_form_frame, text="Dripper")
