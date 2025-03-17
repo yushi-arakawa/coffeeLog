@@ -684,12 +684,20 @@ class BeanApp(ctk.CTk):
     def get_grinder_options(self):
         from setup_db import Grinder  # Grinder モデルのインポート
         grinders = session.query(Grinder).all()
-        return [grinder.name for grinder in grinders]
+        self.grinder_display_to_id = {
+            f"{grinder.name} | {grinder.model}": grinder.id
+            for grinder in grinders
+        }
+        return list(self.grinder_display_to_id.keys())
 
     def get_dripper_options(self):
         from setup_db import Dripper  # Dripper モデルのインポート
         drippers = session.query(Dripper).all()
-        return [dripper.name for dripper in drippers]
+        self.dripper_display_to_id = {
+            f"{dripper.name} | {dripper.model} | {dripper.filter_type}": dripper.id
+            for dripper in drippers
+        }
+        return list(self.dripper_display_to_id.keys())
 
     def save_recipe(self):
         # ユーザーが選択した情報を取得
