@@ -659,53 +659,115 @@ class BeanApp(ctk.CTk):
         self.recipe_create_form()
     
     def recipe_create_form(self):
-        # Beanの選択
+        # Beanの選択（ComboBox版）
         self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="Bean")
         self.bean_label.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        self.bean_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_bean_options())
-        self.bean_dropdown.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
 
+        # Beanの選択肢を取得
+        bean_options = self.get_bean_options()
+
+        # ComboBoxの作成
+        self.bean_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=list(self.bean_dict.keys()),
+            width=100,
+            state="readonly",
+            command=self.update_related_options
+        )
+        self.bean_combobox.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+
+        # 原産国の選択
+        self.origin_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=100,
+            state="readonly"
+        )
+        self.origin_combobox.grid(row=0, column=2, padx=5, pady=5, sticky="nsew")
+        
+        # 焙煎度の選択
+        self.roast_level_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=100,
+            state="readonly"
+        )
+        self.roast_level_combobox.grid(row=0, column=3, padx=5, pady=5, sticky="nsew")
+        
+        # 焙煎日の選択
+        self.date_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=100,
+            state="readonly"
+        )
+        self.date_combobox.grid(row=0, column=4, padx=5, pady=5, sticky="nsew")
+        
+        # 初期選択を設定
+        if self.bean_dict:
+            first_bean = list(self.bean_dict.keys())[0]
+            self.bean_combobox.set(first_bean)
+            self.update_related_options(first_bean)
+        
         # Waterの選択
         self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="Water")
         self.water_label.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-        self.water_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_water_options())
-        self.water_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
+        #self.water_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_water_options())
+        #self.water_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
 
         # Grinderの選択
         self.grinder_label = ctk.CTkLabel(self.recipe_form_frame, text="Grinder")
         self.grinder_label.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
-        self.grinder_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_grinder_options())
-        self.grinder_dropdown.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
+        #self.grinder_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_grinder_options())
+        #self.grinder_dropdown.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
 
         # Dripperの選択
         self.dripper_label = ctk.CTkLabel(self.recipe_form_frame, text="Dripper")
         self.dripper_label.grid(row=3, column=0, padx=5, pady=5, sticky="nsew")
-        self.dripper_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_dripper_options())
-        self.dripper_dropdown.grid(row=3, column=1, padx=5, pady=5)
+        #self.dripper_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_dripper_options())
+        #self.dripper_dropdown.grid(row=3, column=1, padx=5, pady=5)
 
         # その他の入力フィールド
         self.room_temp_label = ctk.CTkLabel(self.recipe_form_frame, text="Room Temperature:")
         self.room_temp_label.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
-        self.room_temp_entry = ctk.CTkEntry(self.recipe_form_frame)
-        self.room_temp_entry.grid(row=4, column=1, padx=5, pady=5)
+        #self.room_temp_entry = ctk.CTkEntry(self.recipe_form_frame)
+        #self.room_temp_entry.grid(row=4, column=1, padx=5, pady=5)
 
         self.humidity_label = ctk.CTkLabel(self.recipe_form_frame, text="Humidity:")
         self.humidity_label.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
-        self.humidity_entry = ctk.CTkEntry(self.recipe_form_frame)
-        self.humidity_entry.grid(row=5, column=1, padx=5, pady=5)
+        #self.humidity_entry = ctk.CTkEntry(self.recipe_form_frame)
+        #self.humidity_entry.grid(row=5, column=1, padx=5, pady=5)
 
         # BrewRecord 保存ボタン
-        self.save_button = ctk.CTkButton(self.recipe_form_frame, text="register", command=self.save_recipe)
-        self.save_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+        #self.save_button = ctk.CTkButton(self.recipe_form_frame, text="register", command=self.save_recipe)
+        #self.save_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
 
     def get_bean_options(self):
-        from setup_db import Bean
-        beans = session.query(Bean).all()
-        self.bean_display_to_id = {
-            f"{bean.name} | {bean.origin} | 焙煎度:{bean.roast_level}| 焙煎日: {bean.roast_date}": bean.id
+        beans = session.query(Bean).all()  # DBからBeanデータを取得
+        self.bean_dict = {
+            bean.name: {
+                "id": bean.id,
+                "origin": [bean.origin],
+                "roast_level": [bean.roast_level],
+                "roast_date": [bean.roast_date]
+            }
             for bean in beans
         }
-        return list(self.bean_display_to_id.keys())
+
+    def update_related_options(self, selected_name):
+        """選択された豆に基づき、原産国・焙煎度・焙煎日を更新"""
+        data = self.bean_dict[selected_name]
+        
+        self.origin_combobox.configure(values=data["origin"])
+        self.origin_combobox.set(data["origin"][0])
+        
+        self.roast_level_combobox.configure(values=data["roast_level"])
+        self.roast_level_combobox.set(data["roast_level"][0])
+        
+        self.date_combobox.configure(values=[str(date) for date in data["roast_date"]])
+        self.date_combobox.set(data["roast_date"][0])
+        
+        self.selected_bean_id = data["id"]
 
     def get_water_options(self):
         from setup_db import Water  # Water モデルのインポート
