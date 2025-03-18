@@ -6,6 +6,7 @@ from setup_db import init_db, Bean
 from datetime import date
 import random
 
+
 # フォント
 FONT_TITLE = ("Montserrat", 30)
 FONT_HEADER = ("Montserrat", 18)
@@ -25,7 +26,7 @@ class BeanApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("BrewRecord")
-        self.geometry("1150x700")
+        self.geometry("1100x700")
         self.selected_bean_id = None  # 編集・削除対象ID
 
         # パスの設定
@@ -103,7 +104,7 @@ class BeanApp(ctk.CTk):
         self.analysis_button = ctk.CTkButton(self.nav_frame, image=analysis_img, text="", width=50, height=50, command=self.show_analysis_page)
         self.analysis_button.grid(row=7, column=0, pady=10, padx=20, sticky="ew")
 
-        self.setting_button = ctk.CTkButton(self.nav_frame, image=setting_img, text="", width=50, height=50, command=self.show_analysis_page)
+        self.setting_button = ctk.CTkButton(self.nav_frame, image=setting_img, text="", width=50, height=50, command=self.show_setting_page)
         self.setting_button.grid(row=9, column=0, pady=10, padx=20, sticky="ew")
 
         # メインコンテンツ
@@ -755,7 +756,11 @@ class BeanApp(ctk.CTk):
 
     def show_analysis_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="analysis Page", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="analysis", font=FONT_TITLE).pack(pady=20)
+
+    def show_setting_page(self):
+        self.clear_content_frame()
+        ctk.CTkLabel(self.content_frame, text="setting", font=FONT_TITLE).pack(pady=20)
 
 
 if __name__ == "__main__":
