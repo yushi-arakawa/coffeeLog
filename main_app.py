@@ -644,7 +644,7 @@ class BeanApp(ctk.CTk):
 
     def show_recipe_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE).grid(pady=20)
         #self.clear_content_frame()
         
         title_label = ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE)
@@ -669,7 +669,7 @@ class BeanApp(ctk.CTk):
         self.bean_label.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         # Beanの選択肢を取得
-        bean_names = self.get_bean_options()  # この部分で選択肢を取得
+        bean_names = [bean[0] for bean in Bean.get_all_bean_names()]
 
         # ComboBoxの作成
         self.bean_combobox = ctk.CTkComboBox(
@@ -711,62 +711,34 @@ class BeanApp(ctk.CTk):
         self.date_combobox.grid(row=0, column=4, padx=5, pady=5, sticky="nsew")
         
         # 初期選択を設定
-        if self.bean_dict:
-            first_bean_id = list(self.bean_dict.keys())[0]  # 最初のIDを取得
+        # 初期選択を設定
+        if bean_names:
+            first_bean = bean_names[0]  # 最初の豆の名前を取得
+            self.bean_combobox.set(first_bean)  # 名前をコンボボックスにセット
+            self.update_origin_options(first_bean)  # 原産国の更新
 
-            first_bean = self.bean_dict[first_bean_id]["name"]
-            first_origin = self.bean_dict[first_bean_id]["origin"]
-            first_roast_level = self.bean_dict[first_bean_id]["roast_level"]
-
-            # コンボボックスにIDではなく、名前をセット
-            self.bean_combobox.set(bean_names[0]) 
-            self.update_origin_options(bean_names[0])  
-
-    def get_bean_options(self):
-        beans = session.query(Bean).all()
-        bean_names = []
-
-        # 名前をリストに追加
-        for bean in beans:
-            self.bean_dict[bean.id] = {
-                "name": bean.name,
-                "origin": bean.origin,
-                "roast_level": bean.roast_level,
-                "roast_date": str(bean.roast_date),
-            }
-            bean_names.append(bean.name)  # 名前を追加
-
-        return bean_names  # ここでリストを返す
-
-    # 名前を選んだら原産国を更新する
     def update_origin_options(self, selected_bean_name):
-        bean_data = [bean for bean in self.bean_dict.values() if bean["name"] == selected_bean_name]
+        origins = [origin[0] for origin in Bean.get_origins_by_bean(selected_bean_name)]
         
-        if bean_data:
-            origins = list(set(bean["origin"] for bean in bean_data))
-            origin_values = [f"原産国: {origin}" for origin in origins]
-            origin_dict = {f"原産国: {origin}": origin for origin in origins}
+        if origins:
+            self.origin_combobox.configure(values=origins)
+            self.origin_combobox.set(origins[0])  # 初期値をセット
+            self.update_roast_options(selected_bean_name, origins[0])
 
-            self.origin_combobox.configure(values=origin_values)
-            self.origin_combobox.set(origin_values[0] if origin_values else "")
+    def update_roast_options(self, selected_bean_name, selected_origin):
+        roast_levels = [roast_level[0] for roast_level in Bean.get_roast_levels_by_bean_and_origin(selected_bean_name, selected_origin)]
+        
+        if roast_levels:
+            self.roast_level_combobox.configure(values=roast_levels)
+            self.roast_level_combobox.set(roast_levels[0])  # 初期値をセット
+            self.update_date_options(selected_bean_name, selected_origin, roast_levels[0])
 
-            # 原産国が決まったら、焙煎度を更新
-            self.update_roast_options(origin_dict.get(origin_values[0], ""))  # 実際の値を渡す
-
-    def update_roast_options(self, selected_origin):
-        selected_bean_id = self.bean_combobox.get()
-        selected_bean = self.bean_dict.get(selected_bean_id)
-
-        if selected_bean:
-            # 焙煎度をリストアップ
-            roast_levels = [selected_bean["roast_level"]]
-            roast_level_values = [f"焙煎度: {roast_level}" for roast_level in roast_levels]
-
-            self.roast_level_combobox.configure(values=roast_level_values)
-            self.roast_level_combobox.set(roast_level_values[0] if roast_level_values else "")
-
-            # 焙煎度が決まったら、焙煎日を更新
-            self.update_date_options(selected_bean["roast_level"])
+    def update_date_options(self, selected_bean_name, selected_origin, selected_roast_level):
+        roast_dates = [roast_date[0] for roast_date in Bean.get_roast_dates_by_bean_origin_roast(selected_bean_name, selected_origin, selected_roast_level)]
+        
+        if roast_dates:
+            self.date_combobox.configure(values=roast_dates)
+            self.date_combobox.set(roast_dates[0])  # 初期値をセット
 
     def update_date_options(self, selected_roast_level):
         selected_bean_id = self.bean_combobox.get()
