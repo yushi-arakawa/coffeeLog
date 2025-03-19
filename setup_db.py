@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Fore
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import date
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import PrimaryKeyConstraint
 
 # データベースの設定
 DATABASE_URL = "sqlite:///coffee_brew.db"  # SQLiteファイルとして保存される
@@ -25,6 +26,9 @@ class Bean(Base):
     roast_level = Column(String)  # 浅煎り/中煎り/深煎り
     roast_date = Column(Date)
     note = Column(String)
+
+    # 複合主キーとしてIDとNAMEを設定
+    #__table_args__ = (PrimaryKeyConstraint('id', 'name'))
 
     @classmethod
     def get_all_bean_names(cls):
