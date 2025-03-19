@@ -6,6 +6,7 @@ from setup_db import init_db, Bean
 from datetime import date
 import random
 
+
 # フォント
 FONT_TITLE = ("Montserrat", 30)
 FONT_HEADER = ("Montserrat", 18)
@@ -25,7 +26,7 @@ class BeanApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("BrewRecord")
-        self.geometry("1150x700")
+        self.geometry("1100x700")
         self.selected_bean_id = None  # 編集・削除対象ID
 
         # パスの設定
@@ -103,7 +104,7 @@ class BeanApp(ctk.CTk):
         self.analysis_button = ctk.CTkButton(self.nav_frame, image=analysis_img, text="", width=50, height=50, command=self.show_analysis_page)
         self.analysis_button.grid(row=7, column=0, pady=10, padx=20, sticky="ew")
 
-        self.setting_button = ctk.CTkButton(self.nav_frame, image=setting_img, text="", width=50, height=50, command=self.show_analysis_page)
+        self.setting_button = ctk.CTkButton(self.nav_frame, image=setting_img, text="", width=50, height=50, command=self.show_setting_page)
         self.setting_button.grid(row=9, column=0, pady=10, padx=20, sticky="ew")
 
         # メインコンテンツ
@@ -224,8 +225,12 @@ class BeanApp(ctk.CTk):
             bean = Bean(name=data["name"], origin=data["origin"], roast_level=data["roast level"], roast_date=roast_date, note=data["note"])
             session.add(bean)
 
-        session.commit()
-        session.refresh(bean)
+        try:
+            session.commit()
+            session.refresh(bean)
+        except Exception as e:
+            session.rollback()  # トランザクションが失敗した場合にロールバック
+            print(f"Error occurred: {e}")
         self.clear_form()
         self.show_bean_list()
 
@@ -638,11 +643,7 @@ class BeanApp(ctk.CTk):
 
     def show_recipe_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE).pack(pady=20)
-        self.clear_content_frame()
-        
-        title_label = ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE)
-        title_label.grid(row=0, column=0, columnspan=2, pady=(10, 20))
+        ctk.CTkLabel(self.content_frame, text="Recipe", font=FONT_TITLE).grid(pady=20)
 
         # content_frame 自体が広がるように設定
         self.content_frame.grid_rowconfigure(1, weight=1)  # レシピフォームの行
@@ -658,53 +659,104 @@ class BeanApp(ctk.CTk):
         self.recipe_create_form()
     
     def recipe_create_form(self):
-        # Beanの選択
-        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="Bean")
-        self.bean_label.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
-        self.bean_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_bean_options())
-        self.bean_dropdown.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
 
-        # Waterの選択
-        self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="Water")
-        self.water_label.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
-        self.water_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_water_options())
-        self.water_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
+        self.recipe_form_frame.grid_columnconfigure(0, weight=0, minsize=100)
+        self.recipe_form_frame.grid_columnconfigure(1, weight=1, minsize=200)
+        self.recipe_form_frame.grid_columnconfigure(2, weight=1, minsize=200)
+        self.recipe_form_frame.grid_columnconfigure(3, weight=1, minsize=200)
+        self.recipe_form_frame.grid_columnconfigure(4, weight=1, minsize=200)
 
-        # Grinderの選択
-        self.grinder_label = ctk.CTkLabel(self.recipe_form_frame, text="Grinder")
-        self.grinder_label.grid(row=2, column=0, padx=5, pady=5, sticky="nsew")
-        self.grinder_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_grinder_options())
-        self.grinder_dropdown.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
+        # Beanの選択（ComboBox版）
+        custom_font = ctk.CTkFont(size=20)
+        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="Bean",font=FONT_HEADER)
+        self.bean_label.grid(row=0, column=0, padx=5, pady=5, rowspan=2)
 
-        # Dripperの選択
-        self.dripper_label = ctk.CTkLabel(self.recipe_form_frame, text="Dripper")
-        self.dripper_label.grid(row=3, column=0, padx=5, pady=5, sticky="nsew")
-        self.dripper_dropdown = ctk.CTkOptionMenu(self.recipe_form_frame, values=self.get_dripper_options())
-        self.dripper_dropdown.grid(row=3, column=1, padx=5, pady=5)
+        # Beanの選択肢を取得
+        bean_names = [bean[0] for bean in Bean.get_all_bean_names()]
 
-        # その他の入力フィールド
-        self.room_temp_label = ctk.CTkLabel(self.recipe_form_frame, text="Room Temperature:")
-        self.room_temp_label.grid(row=4, column=0, padx=5, pady=5, sticky="nsew")
-        self.room_temp_entry = ctk.CTkEntry(self.recipe_form_frame)
-        self.room_temp_entry.grid(row=4, column=1, padx=5, pady=5)
+        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="name")
+        self.bean_label.grid(row=0, column=1, padx=5, pady=5)
+        # ComboBoxの作成
+        self.bean_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=bean_names,
+            width=200,
+            state="readonly",
+            command=self.update_origin_options
+        )
+        self.bean_combobox.grid(row=1, column=1, padx=5, pady=5)
 
-        self.humidity_label = ctk.CTkLabel(self.recipe_form_frame, text="Humidity:")
-        self.humidity_label.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
-        self.humidity_entry = ctk.CTkEntry(self.recipe_form_frame)
-        self.humidity_entry.grid(row=5, column=1, padx=5, pady=5)
+        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="origin")
+        self.bean_label.grid(row=0, column=2, padx=5, pady=5)
+        # 原産国の選択
+        self.origin_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=200,
+            state="readonly",
+            command=self.update_roast_options
+        )
+        self.origin_combobox.grid(row=1, column=2, padx=5, pady=5)
 
-        # BrewRecord 保存ボタン
-        self.save_button = ctk.CTkButton(self.recipe_form_frame, text="register", command=self.save_recipe)
-        self.save_button.grid(row=6, column=0, columnspan=2, padx=5, pady=5)
+        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="roast level")
+        self.bean_label.grid(row=0, column=3, padx=5, pady=5)
+        # 焙煎度の選択
+        self.roast_level_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=200,
+            state="readonly",
+            command=self.update_date_options 
+        )
+        self.roast_level_combobox.grid(row=1, column=3, padx=5, pady=5)
+        
+        self.bean_label = ctk.CTkLabel(self.recipe_form_frame, text="roast date")
+        self.bean_label.grid(row=0, column=4, padx=5, pady=5)
+        # 焙煎日の選択
+        self.date_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=200,
+            state="readonly"
+        )
+        self.date_combobox.grid(row=1, column=4, padx=5, pady=5)
+        
+        # 初期選択を設定
+        if bean_names:
+            first_bean = bean_names[0]
+            self.bean_combobox.set(first_bean) 
+            self.update_origin_options(first_bean) 
 
-    def get_bean_options(self):
-        from setup_db import Bean
-        beans = session.query(Bean).all()
-        self.bean_display_to_id = {
-            f"{bean.name} | {bean.origin} | 焙煎度:{bean.roast_level}| 焙煎日: {bean.roast_date}": bean.id
-            for bean in beans
-        }
-        return list(self.bean_display_to_id.keys())
+    def update_origin_options(self, selected_bean_name):
+        origins = [origin[0] for origin in Bean.get_origins_by_bean(selected_bean_name)]
+        
+        if origins:
+            self.origin_combobox.configure(values=origins or ["No available dates"])
+            self.origin_combobox.set(origins[0])  # 初期値をセット
+            self.update_roast_options(selected_bean_name, origins[0])
+
+    def update_roast_options(self, selected_bean_name, selected_origin):
+        roast_levels = [roast_level[0] for roast_level in Bean.get_roast_levels_by_bean_and_origin(selected_bean_name, selected_origin)]
+        
+        if roast_levels:
+            self.roast_level_combobox.configure(values=roast_levels or ["No available dates"])
+            self.roast_level_combobox.set(roast_levels[0])  # 初期値をセット
+            self.update_date_options(selected_bean_name, selected_origin, roast_levels[0])
+
+    def update_date_options(self, selected_bean_name, selected_origin, selected_roast_level):
+        print(f"update_date_options called with: Bean={selected_bean_name}, Origin={selected_origin}, Roast Level={selected_roast_level}")
+    
+        roast_dates = Bean.get_roast_dates_by_bean_origin_roast(selected_bean_name, selected_origin, selected_roast_level)
+
+        # None の場合は空リストに置き換え
+        if roast_dates is None:
+            roast_dates = []
+
+        roast_dates = [str(roast_date[0]) for roast_date in roast_dates if roast_date and roast_date[0]]
+
+        # コンボボックスを更新
+        self.date_combobox.configure(values=roast_dates if roast_dates else [""])
+        self.date_combobox.set(roast_dates[0] if roast_dates else "")
 
     def get_water_options(self):
         from setup_db import Water  # Water モデルのインポート
@@ -755,7 +807,11 @@ class BeanApp(ctk.CTk):
 
     def show_analysis_page(self):
         self.clear_content_frame()
-        ctk.CTkLabel(self.content_frame, text="analysis Page", font=FONT_TITLE).pack(pady=20)
+        ctk.CTkLabel(self.content_frame, text="analysis", font=FONT_TITLE).pack(pady=20)
+
+    def show_setting_page(self):
+        self.clear_content_frame()
+        ctk.CTkLabel(self.content_frame, text="setting", font=FONT_TITLE).pack(pady=20)
 
 
 if __name__ == "__main__":

@@ -3,12 +3,18 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Fore
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from datetime import date
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import PrimaryKeyConstraint
 
 # データベースの設定
-DATABASE_URL = "sqlite:///coffee.db"  # SQLiteファイルとして保存される
+DATABASE_URL = "sqlite:///coffee_brew.db"  # SQLiteファイルとして保存される
 
 # ORMベース
 Base = declarative_base()
+
+# エンジンとセッションの作成
+engine = create_engine(DATABASE_URL, echo=True)
+Session = sessionmaker(bind=engine)
+session = Session()  # セッションオブジェクトの作成
 
 # ---- 各テーブル定義 ----
 
@@ -20,6 +26,27 @@ class Bean(Base):
     roast_level = Column(String)  # 浅煎り/中煎り/深煎り
     roast_date = Column(Date)
     note = Column(String)
+
+    # 複合主キーとしてIDとNAMEを設定
+    #__table_args__ = (PrimaryKeyConstraint('id', 'name'))
+
+    @classmethod
+    def get_all_bean_names(cls):
+        return session.query(cls.name).distinct().all()
+
+    @classmethod
+    def get_origins_by_bean(cls, bean_name):
+        return session.query(cls.origin).filter(cls.name == bean_name).distinct().all()
+
+    @classmethod
+    def get_roast_levels_by_bean_and_origin(cls, bean_name, origin):
+        return session.query(cls.roast_level).filter(cls.name == bean_name, cls.origin == origin).distinct().all()
+
+    @classmethod
+    def get_roast_dates_by_bean_origin_roast(cls, bean_name, origin, roast_level):
+        return session.query(cls.roast_date).filter(
+            cls.name == bean_name, cls.origin == origin, cls.roast_level == roast_level
+        ).distinct().all()
 
 class Water(Base):
     __tablename__ = 'waters'
