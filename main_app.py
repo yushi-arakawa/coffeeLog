@@ -2,7 +2,7 @@ import os
 import customtkinter as ctk
 from PIL import Image, ImageTk
 from sqlalchemy.orm import sessionmaker
-from setup_db import init_db, Bean
+from setup_db import init_db, Bean, Water
 from datetime import date
 import random
 
@@ -720,12 +720,60 @@ class BeanApp(ctk.CTk):
             state="readonly"
         )
         self.date_combobox.grid(row=1, column=4, padx=5, pady=5)
+
+        # Waterの選択（ComboBox版）
+        custom_font = ctk.CTkFont(size=20)
+        self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="Water",font=FONT_HEADER)
+        self.water_label.grid(row=3, column=0, padx=5, pady=5, rowspan=2)
+
+        # Waterの選択肢を取得
+        water_names = [water[0] for water in Water.get_all_water_names()]
+
+        self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="name")
+        self.water_label.grid(row=3, column=1, padx=5, pady=5)
+        # ComboBoxの作成
+        self.water_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=water_names,
+            width=200,
+            state="readonly",
+            command=self.update_hardness_options
+        )
+        self.water_combobox.grid(row=4, column=1, padx=5, pady=5)
+
+        self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="hardness")
+        self.water_label.grid(row=3, column=2, padx=5, pady=5)
+        # 硬度の選択
+        self.hardness_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=200,
+            state="readonly",
+            command=self.update_ph_options
+        )
+        self.hardness_combobox.grid(row=4, column=2, padx=5, pady=5)
+
+        self.water_label = ctk.CTkLabel(self.recipe_form_frame, text="ph")
+        self.water_label.grid(row=3, column=3, padx=5, pady=5)
+        # phの選択
+        self.ph_combobox = ctk.CTkComboBox(
+            self.recipe_form_frame,
+            values=[],
+            width=200,
+            state="readonly",
+        )
+        self.ph_combobox.grid(row=4, column=3, padx=5, pady=5)
         
         # 初期選択を設定
         if bean_names:
             first_bean = bean_names[0]
             self.bean_combobox.set(first_bean) 
             self.update_origin_options(first_bean) 
+        
+        if water_names:
+            first_water = water_names[0]
+            self.water_combobox.set(first_water)
+            self.update_hardness_options(first_water)
 
     def update_origin_options(self, selected_bean_name):
         origins = [origin[0] for origin in Bean.get_origins_by_bean(selected_bean_name)]
@@ -757,6 +805,26 @@ class BeanApp(ctk.CTk):
         # コンボボックスを更新
         self.date_combobox.configure(values=roast_dates if roast_dates else [""])
         self.date_combobox.set(roast_dates[0] if roast_dates else "")
+
+    
+    def update_hardness_options(self, selected_water_name):
+        hardness = [hardness[0] for hardness in Water.get_hardness_by_water(selected_water_name)]
+
+        if hardness:
+            hardness = [str(h) for h in hardness]  
+            self.hardness_combobox.configure(values=hardness or ["No available dates"])
+            self.hardness_combobox.set(hardness[0])  # 初期値をセット
+            self.update_ph_options(selected_water_name, hardness[0])
+
+    def update_ph_options(self, selected_water_name, water_hardness):
+        print(f"update_date_options called with: Water={selected_water_name}, Hardness={water_hardness}")
+    
+        ph = Water.get_ph_by_water_hardness(selected_water_name, water_hardness)
+
+        # コンボボックスを更新
+        ph = [str(p[0]) for p in ph if p[0] is not None]
+        self.ph_combobox.configure(values=ph if ph else [""])
+        self.ph_combobox.set(ph[0] if ph else "")
 
     def get_water_options(self):
         from setup_db import Water  # Water モデルのインポート

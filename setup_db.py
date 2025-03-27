@@ -56,6 +56,18 @@ class Water(Base):
     ph = Column(Float)  # pH値
     note = Column(String)  # メモ
 
+    @classmethod
+    def get_all_water_names(cls):
+        return session.query(cls.name).distinct().all()
+    
+    @classmethod
+    def get_hardness_by_water(cls, water_name):
+        return session.query(cls.hardness).filter(cls.name == water_name).distinct().all()
+    
+    @classmethod
+    def get_ph_by_water_hardness(cls, water_name, hardness):
+        return session.query(cls.ph).filter(cls.name == water_name, cls.hardness == hardness).distinct().all()
+
 class Grinder(Base):
     __tablename__ = 'grinders'
     id = Column(Integer, primary_key=True)
